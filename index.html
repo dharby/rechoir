@@ -2,26 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1e40af" />
-    <meta name="description" content="RECHOIR - Professional Choir Management System" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <title>RECHOIR - Choir Management System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
+    <title>RECHOIR — The Choir Command Center</title>
+    <meta name="description" content="RECHOIR is the all-in-one command center for African church choirs. Manage rehearsals, songs, attendance, prayer chains, payments and your team  beautifully.">
+    <meta name="author" content="RECHOIR" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#1e3a8a" />
+    <link rel="apple-touch-icon" href="/rechoir-icon.png" />
+    <link rel="icon" type="image/png" href="/rechoir-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="RECHOIR" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/upuEMdGW0lOrP4bkYCs3HaXRuYF3/social-images/social-1777467688363-ChatGPT_Image_Apr_29,_2026,_02_00_29_PM.webp">
+
+    <meta name="twitter:card" content="summary_large_image" />
+    
+  
+  
+  
+  <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/upuEMdGW0lOrP4bkYCs3HaXRuYF3/social-images/social-1777467688363-ChatGPT_Image_Apr_29,_2026,_02_00_29_PM.webp">
+  <meta property="og:title" content="RECHOIR — The Choir Command Center">
+  <meta name="twitter:title" content="RECHOIR — The Choir Command Center">
+  <meta property="og:description" content="RECHOIR is the all-in-one command center for African church choirs. Manage rehearsals, songs, attendance, prayer chains, payments and your team  beautifully.">
+  <meta name="twitter:description" content="RECHOIR is the all-in-one command center for African church choirs. Manage rehearsals, songs, attendance, prayer chains, payments and your team  beautifully.">
+</head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
-      }
+      (function () {
+        try {
+          var m = localStorage.getItem('rechoir.theme') || 'system';
+          var d = m === 'dark' || (m === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (d) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
     </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
