@@ -13,7 +13,7 @@ import { useBulkSelect } from "@/hooks/useBulkSelect";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardCheck, Plus, MessageSquare, Trash2, Edit3, ShieldCheck, Clock } from "lucide-react";
+import { ClipboardCheck, Plus, MessageSquare, Trash2, Edit3, ShieldCheck, Clock, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { initials, avatarGradient } from "@/lib/utils-rechoir";
@@ -54,7 +54,10 @@ export default function ServiceAttendance() {
   const [form, setForm] = useState({ title: "", kind: "service" as const, date: "", start_time: "", end_time: "", location: "" });
   const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<RosterStatus | "all">("all");
+  const [eventSearch, setEventSearch] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
   const [editingLateAfter, setEditingLateAfter] = useState("");
+
 
   const { data: events } = useQuery({
     queryKey: ["service-events", team?.id],
@@ -189,6 +192,18 @@ export default function ServiceAttendance() {
     toast.success("Late cutoff updated");
   };
 
+  const visibleEvents = useMemo(() => {
+    const list = (events ?? []) as any[];
+    const q = eventSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((e: any) => {
+      const d = e.date ? new Date(e.date) : null;
+      const hay = [e.title, e.kind, e.location, e.date, d ? format(d, "MMM dd, yyyy") : "", d ? format(d, "EEEE") : ""]
+        .filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [events, eventSearch]);
+
   const roster = useMemo(() => {
     return (members ?? []).map((m: any) => {
       const rec: any = records?.find((r: any) => r.member_id === m.id);
@@ -203,7 +218,14 @@ export default function ServiceAttendance() {
     return { total: roster.length, ...c };
   }, [roster]);
 
-  const filtered = filter === "all" ? roster : roster.filter((r) => r.status === filter);
+  const filtered = useMemo(() => {
+    const byStatus = filter === "all" ? roster : roster.filter((r) => r.status === filter);
+    const q = memberSearch.trim().toLowerCase();
+    if (!q) return byStatus;
+    return byStatus.filter(({ member: m }) =>
+      `${m.full_name ?? ""} ${m.email ?? ""} ${m.specialization ?? ""}`.toLowerCase().includes(q));
+  }, [roster, filter, memberSearch]);
+
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -254,9 +276,15 @@ export default function ServiceAttendance() {
 
       </div>
 
-      <Card className="p-4 glass">
+      <Card className="p-4 glass space-y-3">
+        <Input
+          placeholder="Search events by name or date (e.g. Rehearsal, 2026-08-19)"
+          value={eventSearch}
+          onChange={(e) => setEventSearch(e.target.value)}
+          className="max-w-md"
+        />
         <div className="flex flex-wrap gap-2">
-          {events?.map((e: any) => (
+          {visibleEvents.map((e: any) => (
             <div key={e.id} className={`flex items-center gap-1 rounded-lg border ${bulk.selected.includes(e.id) ? "ring-2 ring-primary" : ""} ${selected === e.id ? "border-primary bg-primary/10" : "border-border"}`}>
               {isLead && bulk.selecting && (
                 <Checkbox className="ml-2" checked={bulk.selected.includes(e.id)} onCheckedChange={() => bulk.toggle(e.id)} />
@@ -274,15 +302,27 @@ export default function ServiceAttendance() {
               )}
             </div>
           ))}
-          {events?.length === 0 && <p className="text-sm text-muted-foreground">{isLead ? "Create an event to start." : "No events yet."}</p>}
+          {visibleEvents.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              {events?.length ? "No events match your search." : isLead ? "Create an event to start." : "No events yet."}
+            </p>
+          )}
         </div>
       </Card>
+
 
       {selected && (
         <>
           <Card className="p-5 glass space-y-3">
             <AttendanceTotals total={totals.total} present={totals.present} late={totals.late} absent={totals.absent} excused={totals.excused} />
             <AttendanceFilterChips value={filter} onChange={setFilter} />
+            <Input
+              placeholder="Search members by name"
+              value={memberSearch}
+              onChange={(e) => setMemberSearch(e.target.value)}
+              className="max-w-sm"
+            />
+
             {isLead && (
               <div className="flex items-center gap-2 pt-2 border-t border-border/60">
                 <Clock className="h-4 w-4 text-muted-foreground" />

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarDays, Plus, MapPin, Clock, Trash2, Edit3 } from "lucide-react";
+import { CalendarDays, Plus, MapPin, Clock, Trash2, Edit3, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { notifyTeam } from "@/lib/notifications";
@@ -34,6 +34,8 @@ export default function UpcomingEvents() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [filter, setFilter] = useState<Kind>("all");
+  const [search, setSearch] = useState("");
+
   const [form, setForm] = useState({
     title: "", kind: "rehearsal" as Exclude<Kind, "all">, date: "",
     start_time: "", end_time: "", location: "", notes: "", priority: 2,
@@ -50,8 +52,22 @@ export default function UpcomingEvents() {
 
   const visible = useMemo(() => {
     const list = events ?? [];
-    return filter === "all" ? list : list.filter((e: any) => e.kind === filter);
-  }, [events, filter]);
+    const byKind = filter === "all" ? list : list.filter((e: any) => e.kind === filter);
+    const q = search.trim().toLowerCase();
+    if (!q) return byKind;
+    return byKind.filter((e: any) => {
+      const d = e.date ? new Date(e.date) : null;
+      const haystack = [
+        e.title,
+        e.location,
+        e.date,
+        d ? format(d, "MMM dd, yyyy") : "",
+        d ? format(d, "EEEE") : "",
+      ].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [events, filter, search]);
+
 
   const submit = async () => {
     if (!team) return;
@@ -166,13 +182,25 @@ export default function UpcomingEvents() {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {(["all", "service", "rehearsal", "event"] as Kind[]).map((k) => (
-          <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>
-            {k === "all" ? "All" : KIND_LABEL[k]}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title or date…"
+            className="pl-9"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {(["all", "service", "rehearsal", "event"] as Kind[]).map((k) => (
+            <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>
+              {k === "all" ? "All" : KIND_LABEL[k]}
+            </Button>
+          ))}
+        </div>
       </div>
+
 
       <div className="grid md:grid-cols-2 gap-4">
         {visible.length === 0 && <p className="text-muted-foreground col-span-full text-center py-12">No events scheduled yet.</p>}
