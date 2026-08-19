@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCanManage } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { useBulkSelect } from "@/hooks/useBulkSelect";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardCheck, Plus, MessageSquare, Trash2, Edit3, ShieldCheck, Clock, Search } from "lucide-react";
+import { ClipboardCheck, Plus, MessageSquare, Trash2, Edit3, ShieldCheck, Clock, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { initials, avatarGradient } from "@/lib/utils-rechoir";
@@ -57,6 +57,27 @@ export default function ServiceAttendance() {
   const [eventSearch, setEventSearch] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
   const [editingLateAfter, setEditingLateAfter] = useState("");
+  const eventSearchRef = useRef<HTMLInputElement>(null);
+  const memberSearchRef = useRef<HTMLInputElement>(null);
+
+  // Press "/" anywhere to focus search (member search when an event is open), Esc to clear.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        (memberSearchRef.current ?? eventSearchRef.current)?.focus();
+      } else if (e.key === "Escape" && typing) {
+        if (t === eventSearchRef.current) { setEventSearch(""); eventSearchRef.current?.blur(); }
+        if (t === memberSearchRef.current) { setMemberSearch(""); memberSearchRef.current?.blur(); }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+
 
 
   const { data: events } = useQuery({
@@ -277,12 +298,49 @@ export default function ServiceAttendance() {
       </div>
 
       <Card className="p-4 glass space-y-3">
-        <Input
-          placeholder="Search events by name or date (e.g. Rehearsal, 2026-08-19)"
-          value={eventSearch}
-          onChange={(e) => setEventSearch(e.target.value)}
-          className="max-w-md"
-        />
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={eventSearchRef}
+            placeholder="Search events by name or date  ( press / )"
+            value={eventSearch}
+            onChange={(e) => setEventSearch(e.target.value)}
+            className="pl-9 pr-8"
+          />
+          {eventSearch && (
+            <button onClick={() => setEventSearch("")} aria-label="Clear event search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {(eventSearch || filter !== "all" || memberSearch) && (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Active filters:</span>
+            {eventSearch && (
+              <button onClick={() => setEventSearch("")} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5">
+                Event: “{eventSearch}” <X className="h-3 w-3" />
+              </button>
+            )}
+            {filter !== "all" && (
+              <button onClick={() => setFilter("all")} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 capitalize">
+                Status: {filter} <X className="h-3 w-3" />
+              </button>
+            )}
+            {memberSearch && (
+              <button onClick={() => setMemberSearch("")} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5">
+                Member: “{memberSearch}” <X className="h-3 w-3" />
+              </button>
+            )}
+            <button onClick={() => { setEventSearch(""); setMemberSearch(""); setFilter("all"); }}
+              className="text-primary underline underline-offset-2 ml-1">Clear all</button>
+            <span className="text-muted-foreground ml-auto">
+              {visibleEvents.length} event{visibleEvents.length === 1 ? "" : "s"}
+              {selected ? ` • ${filtered.length} of ${roster.length} members` : ""}
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2">
           {visibleEvents.map((e: any) => (
             <div key={e.id} className={`flex items-center gap-1 rounded-lg border ${bulk.selected.includes(e.id) ? "ring-2 ring-primary" : ""} ${selected === e.id ? "border-primary bg-primary/10" : "border-border"}`}>
@@ -316,12 +374,26 @@ export default function ServiceAttendance() {
           <Card className="p-5 glass space-y-3">
             <AttendanceTotals total={totals.total} present={totals.present} late={totals.late} absent={totals.absent} excused={totals.excused} />
             <AttendanceFilterChips value={filter} onChange={setFilter} />
-            <Input
-              placeholder="Search members by name"
-              value={memberSearch}
-              onChange={(e) => setMemberSearch(e.target.value)}
-              className="max-w-sm"
-            />
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                ref={memberSearchRef}
+                placeholder="Search members by name  ( press / )"
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                className="pl-9 pr-8"
+              />
+              {memberSearch && (
+                <button onClick={() => setMemberSearch("")} aria-label="Clear member search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Showing {filtered.length} of {roster.length} members{filter !== "all" ? ` • ${filter}` : ""}
+            </p>
+
 
             {isLead && (
               <div className="flex items-center gap-2 pt-2 border-t border-border/60">
