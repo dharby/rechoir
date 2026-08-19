@@ -516,16 +516,9 @@ export default function DirectMessages() {
 
                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                       <span>{format(new Date(m.created_at), "p")}</span>
-                      {mine && !m.is_deleted && (() => {
-                        const read = isReadByPeer(m);
-                        return (
-                          <span className="inline-flex items-center gap-1" title={read ? `Read ${format(new Date(peerReadAt!), "PPp")}` : "Sent"}>
-                            <CheckCheck className={cn("h-3.5 w-3.5", read ? "text-accent" : "opacity-40")} />
-                            {read && <span className="text-accent">Read {format(new Date(peerReadAt!), "p")}</span>}
-                          </span>
-                        );
-                      })()}
-
+                      {mine && !m.is_deleted && (
+                        <CheckCheck className={cn("h-3.5 w-3.5", isReadByPeer(m) ? "text-accent" : "opacity-40")} />
+                      )}
                       {!m.is_deleted && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
                           <button title="Reply" onClick={() => setReplyTo(m)} className="hover:text-foreground">
