@@ -125,7 +125,7 @@ export default function MemberDetail() {
 
       <BreakdownCard title="Sign-in attendance breakdown" b={breakdown} total={svcAtt.length} />
 
-      <TrendChart svc={svcAtt} onDrill={setDrill} allowAllTime={isLead} />
+      <TrendChart svc={svcAtt} onDrill={setDrill} />
 
       {profile.probation_started_at && (
         <Card className="p-4 glass border-l-4 border-l-warning">
@@ -177,19 +177,10 @@ function BreakdownCard({ title, b, total }: { title: string; b: { present: numbe
   );
 }
 
-function TrendChart({ svc, onDrill, allowAllTime }: { svc: any[]; onDrill: (d: { label: string; rows: any[] }) => void; allowAllTime?: boolean }) {
-  const [range, setRange] = useState<"12w" | "all">("12w");
-  const now = new Date();
-
-  const dates = svc.map((r) => (r.event?.date ? new Date(r.event.date) : null)).filter(Boolean) as Date[];
-  const earliest = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : now;
-  const weekCount =
-    range === "all" && allowAllTime
-      ? Math.max(12, Math.min(260, Math.ceil((now.getTime() - earliest.getTime()) / (7 * 864e5)) + 1))
-      : 12;
-
+function TrendChart({ svc, onDrill }: { svc: any[]; onDrill: (d: { label: string; rows: any[] }) => void }) {
   const weeks: { key: string; label: string; start: Date; end: Date }[] = [];
-  for (let i = weekCount - 1; i >= 0; i--) {
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
     const end = subDays(now, i * 7);
     const start = subDays(end, 6);
     weeks.push({ key: format(end, "yyyy-MM-dd"), label: format(end, "MMM d"), start, end });
@@ -214,21 +205,13 @@ function TrendChart({ svc, onDrill, allowAllTime }: { svc: any[]; onDrill: (d: {
   });
   const hasAny = data.some((d) => d["Sign-in"] !== null);
 
-
   return (
     <Card className="p-5 glass">
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="h-4 w-4 text-primary" />
-        <div className="font-semibold">Sign-in attendance trend ({range === "all" && allowAllTime ? "all time" : "12 weeks"})</div>
-        {allowAllTime && (
-          <div className="flex gap-1 ml-auto">
-            <Button size="sm" variant={range === "12w" ? "default" : "outline"} onClick={() => setRange("12w")}>12 weeks</Button>
-            <Button size="sm" variant={range === "all" ? "default" : "outline"} onClick={() => setRange("all")}>All time</Button>
-          </div>
-        )}
-        <span className={`text-xs text-muted-foreground ${allowAllTime ? "" : "ml-auto"}`}>Click a point to drill down</span>
+        <div className="font-semibold">Sign-in attendance trend (12 weeks)</div>
+        <span className="text-xs text-muted-foreground ml-auto">Click a point to drill down</span>
       </div>
-
       {!hasAny ? (
         <div className="text-xs text-muted-foreground">Not enough attendance data yet.</div>
       ) : (
