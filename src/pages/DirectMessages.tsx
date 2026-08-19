@@ -347,10 +347,6 @@ export default function DirectMessages() {
 
   const pinnedMsgs = (messages as any[]).filter((m) => m.is_pinned && !m.is_deleted);
   const visibleMsgs = showStarred ? (messages as any[]).filter((m) => starredIds.has(m.id)) : (messages as any[]);
-  const msgById = (mid: string) => (messages as any[]).find((m) => m.id === mid);
-  const authorName = (senderId: string) =>
-    senderId === profile?.id ? "You" : (peer?.full_name || peer?.email || "them");
-
 
   // Mobile: full-page chat — show list when no peer selected, thread otherwise
   const showList = !isMobile || !peerId;
@@ -483,24 +479,9 @@ export default function DirectMessages() {
                         m.is_pinned && "shadow-glow ring-1 ring-secondary/40"
                       )}
                     >
-                      {m.reply_to_id && (() => {
-                        const parent = msgById(m.reply_to_id);
-                        return (
-                          <div className={cn(
-                            "mb-1.5 px-2 py-1 rounded-lg border-l-2 text-xs",
-                            mine ? "border-primary-foreground/60 bg-primary-foreground/10" : "border-primary/60 bg-background/50"
-                          )}>
-                            <div className="font-semibold opacity-80">{parent ? authorName(parent.sender_id) : "Message"}</div>
-                            <div className="truncate opacity-80">
-                              {parent ? (parent.is_deleted ? "message deleted" : parent.content || "attachment") : "unavailable"}
-                            </div>
-                          </div>
-                        );
-                      })()}
                       {renderContent(m)}
                       {m.attachments?.length > 0 && <MessageAttachments items={m.attachments} />}
                     </div>
-
 
                     {Object.keys(reacts).length > 0 && (
                       <div className={cn("flex flex-wrap gap-1 mt-1", mine && "justify-end")}>
@@ -516,23 +497,9 @@ export default function DirectMessages() {
 
                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                       <span>{format(new Date(m.created_at), "p")}</span>
-                      {mine && !m.is_deleted && (() => {
-                        const read = isReadByPeer(m);
-                        return (
-                          <span className="inline-flex items-center gap-1" title={read ? `Read ${format(new Date(peerReadAt!), "PPp")}` : "Sent"}>
-                            <CheckCheck className={cn("h-3.5 w-3.5", read ? "text-accent" : "opacity-40")} />
-                            {read && <span className="text-accent">Read {format(new Date(peerReadAt!), "p")}</span>}
-                          </span>
-                        );
-                      })()}
-
                       {!m.is_deleted && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
-                          <button title="Reply" onClick={() => setReplyTo(m)} className="hover:text-foreground">
-                            <Reply className="h-3.5 w-3.5" />
-                          </button>
                           <Popover>
-
                             <PopoverTrigger asChild>
                               <button title="React" className="hover:text-foreground"><Smile className="h-3.5 w-3.5" /></button>
                             </PopoverTrigger>
@@ -564,22 +531,8 @@ export default function DirectMessages() {
             })}
           </div>
 
-          {replyTo && (
-            <div className="px-3 pt-2 flex items-center gap-2 border-t border-border">
-              <div className="flex-1 min-w-0 px-2 py-1 rounded-lg border-l-2 border-primary bg-muted/50">
-                <div className="text-[10px] font-semibold text-muted-foreground">
-                  Replying to {authorName(replyTo.sender_id)}
-                </div>
-                <div className="text-xs truncate">{replyTo.is_deleted ? "message deleted" : replyTo.content || "attachment"}</div>
-              </div>
-              <Button type="button" size="icon" variant="ghost" onClick={() => setReplyTo(null)} aria-label="Cancel reply">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
 
           <form onSubmit={send} className="border-t border-border p-3 flex items-center gap-2">
-
             <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => onPickFiles(e.target.files)} />
             <Button type="button" size="icon" variant="ghost" onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Attach file">
               <Paperclip className="h-4 w-4" />
