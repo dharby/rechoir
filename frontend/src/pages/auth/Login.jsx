@@ -79,7 +79,7 @@ const Login = () => {
         localStorage.setItem('rechoir_access_code', accessCode);
       }
       navigate('/dashboard');
-    } catch (err) {
+    } catch (_err) {
       setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
@@ -110,7 +110,7 @@ const Login = () => {
 
       if (!success) {
         setError(resetError || 'Password reset failed');
-        setResetLoading(false);
+        setResetLogging(false);
         return;
       }
 
