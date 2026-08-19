@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings as SettingsIcon, Bell, Download, KeyRound, Palette } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Download, KeyRound, Palette, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -27,6 +27,12 @@ export default function Settings() {
   const [spec, setSpec] = useState(profile?.specialization || "");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [receipts, setReceipts] = useState<boolean>((profile as any)?.read_receipts ?? true);
+
+  useEffect(() => {
+    if (profile) setReceipts((profile as any).read_receipts ?? true);
+  }, [profile?.id, (profile as any)?.read_receipts]);
+
 
   // Notifications (sound preference; full status lives in NotificationStatusCard)
   const [pingOn, setPingOn] = useState<boolean>(() => soundEnabled());
@@ -185,9 +191,32 @@ export default function Settings() {
       </Card>
 
       <Card className="p-6 glass space-y-4">
+        <h2 className="font-bold flex items-center gap-2"><CheckCheck className="h-4 w-4" /> Privacy</h2>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-sm font-medium">Read receipts</div>
+            <div className="text-xs text-muted-foreground">
+              Let teammates see when you've read their group and direct messages. Turning this off also hides theirs from you.
+            </div>
+          </div>
+          <Switch
+            checked={receipts}
+            onCheckedChange={async (v) => {
+              if (!profile) return;
+              setReceipts(v);
+              const { error } = await supabase.from("profiles").update({ read_receipts: v }).eq("id", profile.id);
+              if (error) { setReceipts(!v); toast.error(error.message); return; }
+              await refresh();
+            }}
+          />
+        </div>
+      </Card>
+
+      <Card className="p-6 glass space-y-4">
         <h2 className="font-bold flex items-center gap-2"><KeyRound className="h-4 w-4" /> Security</h2>
         <Link to="/reset-password"><Button variant="outline">Reset password</Button></Link>
       </Card>
+
     </div>
   );
 }

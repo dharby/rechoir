@@ -26,19 +26,30 @@ export default function ProtectedRoute({
   if (!session) return <Navigate to="/login" state={{ from: loc }} replace />;
   if (!profile?.team_id) return <Navigate to="/onboarding" replace />;
 
-  if (profile && profile.is_active === false) {
+  const suspendedUntil = (profile as any)?.suspended_until
+    ? new Date((profile as any).suspended_until)
+    : null;
+  const isSuspended = !!suspendedUntil && suspendedUntil.getTime() > Date.now();
+
+  if (profile && (profile.is_active === false || isSuspended)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-extrabold">Account deactivated</h1>
+          <h1 className="text-2xl font-extrabold">
+            {isSuspended ? "Account suspended" : "Account deactivated"}
+          </h1>
           <p className="text-muted-foreground">
-            Your team lead has deactivated your account, so your dashboard is disabled.
-            Please reach out to them to be reactivated.
+            {isSuspended
+              ? `Your access is paused until ${suspendedUntil!.toLocaleDateString()}${
+                  (profile as any).suspension_reason ? ` — ${(profile as any).suspension_reason}` : ""
+                }. Please reach out to your team lead.`
+              : "Your team lead has deactivated your account, so your dashboard is disabled. Please reach out to them to be reactivated."}
           </p>
         </div>
       </div>
     );
   }
+
 
   const isLead = profile?.role === "team_lead";
   const adminPages: string[] = (profile as any)?.admin_pages ?? [];

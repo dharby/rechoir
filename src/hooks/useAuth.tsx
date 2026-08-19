@@ -14,6 +14,9 @@ export type Profile = {
   avatar_url?: string | null;
   is_admin?: boolean | null;
   admin_pages?: string[] | null;
+  read_receipts?: boolean | null;
+  suspended_until?: string | null;
+
 };
 
 export type Team = {
