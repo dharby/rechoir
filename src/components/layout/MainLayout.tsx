@@ -24,6 +24,7 @@ import { HeaderBell } from "@/components/HeaderBell";
 import { useChatUnreadCount } from "@/hooks/useChatUnread";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@supabase/supabase-js";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; leadOnly?: boolean; adminPage?: string; badge?: "chat" | "notif" | "dm" };
 
@@ -101,7 +102,7 @@ function ProfileMenu({ onNav }: { onNav?: () => void }) {
     <div className="flex items-center gap-2 w-full">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 flex-1 min-w-0 px-2 py-2 rounded-lg hover:bg-sidebar-accent/60 transition-smooth">
+          <button className="flex items-center gap-2 flex-1 min-w-0 px-2.5 py-2 rounded-lg bg-card text-foreground hover:bg-accent/10 transition-colors">
             <UserAvatar user={profile} />
             <div className="text-xs flex-1 min-w-0 text-left">
               <div className="font-medium text-foreground truncate">{profile?.full_name || profile?.email}</div>
@@ -110,7 +111,7 @@ function ProfileMenu({ onNav }: { onNav?: () => void }) {
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-56 rounded-xl p-4 bg-card text-foreground shadow-shadow-card border border-border/30">
           <DropdownMenuItem onClick={() => { navigate("/settings"); onNav?.(); }}>
             <Settings className="h-4 w-4 mr-2" /> Settings
           </DropdownMenuItem>
@@ -128,7 +129,7 @@ function ProfileMenu({ onNav }: { onNav?: () => void }) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={async () => { await signOut(); navigate("/"); }} className="bg-destructive text-destructive-foreground">
+                <AlertDialogAction onClick={async () => { await signOut(); navigate("/"); }} className="btn-primary w-full py-2.5 rounded-md font-medium text-primary-foreground">
                   Sign out
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -154,11 +155,11 @@ function SidebarBody({ onNav }: { onNav?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border">
-        <img src={logo} alt="RECHOIR" className="h-10 w-10 rounded-lg shadow-glow object-contain bg-white" />
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border/50">
+        <img src={logo} alt="RECHOIR" className="h-11 w-11 rounded-xl object-contain" />
         <div className="min-w-0">
-          <div className="font-extrabold tracking-tight text-foreground">RECHOIR</div>
-          <div className="text-xs text-muted-foreground truncate max-w-[140px]">
+          <div className="font-extrabold tracking-tight text-sidebar-foreground">RECHOIR</div>
+          <div className="text-xs text-sidebar-foreground/60 truncate max-w-[150px]">
             {team?.name ?? "No choir"}
           </div>
         </div>
@@ -172,10 +173,10 @@ function SidebarBody({ onNav }: { onNav?: () => void }) {
             onClick={onNav}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-elegant"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                  ? "bg-primary/10 text-primary border-primary/20 shadow-sm"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/30 hover:text-primary transition-colors"
               )
             }
           >
@@ -186,7 +187,7 @@ function SidebarBody({ onNav }: { onNav?: () => void }) {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border space-y-3">
+      <div className="p-3 border-t border-sidebar-border/50 space-y-3">
         <div className="flex justify-center"><ThemeToggle /></div>
         <ProfileMenu onNav={onNav} />
       </div>
@@ -200,24 +201,24 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="hidden md:flex w-64 border-r border-sidebar-border">
+      <aside className="hidden md:flex w-64 transition-all duration-300 bg-sidebar text-sidebar-foreground border-r border-sidebar-border/50">
         <SidebarBody />
       </aside>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="hidden md:flex items-center justify-end gap-2 px-6 py-2 border-b border-border bg-card/50 backdrop-blur">
+        <header className="hidden md:flex items-center justify-end gap-2 px-6 py-2 border-b border-border bg-card/50 backdrop-blur border-border/30">
           <HeaderBell />
         </header>
-        <header className="md:hidden flex items-center justify-between p-3 border-b border-border bg-card">
+        <header className="md:hidden flex items-center justify-between p-3 border-b border-border bg-card border-border/30">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon"><Menu /></Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72"><SidebarBody onNav={() => setOpen(false)} /></SheetContent>
+            <SheetContent side="left" className="p-0 w-72 bg-sidebar text-sidebar-foreground border-border/30"><SidebarBody onNav={() => setOpen(false)} /></SheetContent>
           </Sheet>
-          <div className="font-bold">RECHOIR</div>
+          <div className="font-bold text-sidebar-foreground">RECHOIR</div>
           <HeaderBell />
         </header>
-        <main key={location.pathname} className="flex-1 p-4 md:p-8 animate-fade-in-up">
+        <main key={location.pathname} className="flex-1 p-6 md:p-8 min-h-[calc(100vh_-_72px)] animate-slide-up">
           {children}
         </main>
       </div>
