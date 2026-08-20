@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Music2, CalendarDays, HeartHandshake, CreditCard, Copy, Shirt, ListChecks, MessageSquare, BarChart3, ArrowRight } from "lucide-react";
+import { Users, Music2, CalendarDays, HeartHandshake, CreditCard, Copy, Shirt, ListChecks, MessageSquare, BarChart3, ArrowRight, ClipboardCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { format, startOfWeek, addDays, parseISO } from "date-fns";
